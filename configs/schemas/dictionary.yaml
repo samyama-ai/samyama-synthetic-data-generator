@@ -1,0 +1,30 @@
+# Global Attribute Data Dictionary for Samyama Synthetic Data Compiler
+# Overrides or extends built-in scalar and attribute patterns/distributions.
+scalars:
+  Email:
+    regex: "^[a-z]{5,9}\\.[a-z]{4,8}@(clinic|hospital|example|university)\\.(org|com|edu)$"
+  Phone:
+    regex: "^\\+1-[2-9][0-9]{2}-[2-9][0-9]{2}-[0-9]{4}$"
+  ICD10:
+    values: ["E11.9", "I10", "J45.909", "N18.3", "E78.5", "I25.10", "K21.9", "M54.5", "F41.1", "G47.33"]
+  CPT:
+    values: ["99213", "99214", "83036", "80053", "85025", "93000", "71046", "90834", "36415", "80061"]
+  SKU:
+    regex: "^SKU-[A-Z]{3}-[0-9]{5}$"
+
+attributes:
+  age:
+    dist:
+      kind: normal
+      min: 18.0
+      max: 92.0
+      mean: 49.5
+      std: 15.5
+  adjudicationAmount:
+    dist:
+      kind: lognormal
+      min: 25.0
+      max: 15000.0
+      mean: 240.0
+      std: 0.75
+      decimals: 2

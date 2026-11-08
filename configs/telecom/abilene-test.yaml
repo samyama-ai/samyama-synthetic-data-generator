@@ -1,0 +1,74 @@
+# Abilene (11 PoPs): the small dataset behind telecom-kg's tests and quick demos. Rates as in
+# small.yaml, and ASSUMED as they are there. Path convention as in small.yaml: relative to the
+# workspace (common_ws), so the config names no machine.
+pack: telecom
+topology: ../graph_ws/telecom-kg/data/topology-zoo/Abilene.graphml
+start: '2026-01-05T00:00:00'
+slot_hours: 6
+repair_median_ms: 5400000
+overlap_window_ms: 600000
+network:
+  core_per_pop: 2
+  aggregation_per_pop:
+  - 2
+  - 3
+  access_per_pop:
+  - 2
+  - 4
+  ran_share: 0.6
+  dual_home_rate: 0.3
+  enterprise_vpns: 6
+alarms:
+  emit_prob:
+    root: 0.7
+    loss-of-signal: 0.9
+    isolation: 0.95
+    service: 0.8
+    congestion: 0.6
+    neighbour: 0.85
+  los_delay_ms: 2000
+  poll_interval_ms: 300000
+  service_delay_ms: 120000
+  flap_prob: 0.08
+  duplicate_prob: 0.05
+  clock_skew_ms: 3000
+  background_per_hour: 2
+  element_notify_ms: 1200              # one element's agent sends its notifications one at a time
+  neighbour_report_period_ms: 900000   # a live site detects a dead neighbour on its own 15-min measurement period
+  ran_neighbours: 6
+  cells_per_ran: 3
+  background_lead_ms: 3600000
+changes:
+  fault_after_change_prob: 0.15
+  unrelated_per_slot: 1.5
+tickets:
+  misgroup_prob: 0.1
+  background_attach_prob: 0.05
+  duplicate_incident_prob: 0.5
+scenarios:
+- split: history
+  kind: single
+  count: 4
+  fault_types:
+    card_failure: 1
+    port_failure: 1
+    software_crash: 1
+- split: eval
+  kind: single
+  count: 6
+  fault_types:
+    card_failure: 1
+    device_failure: 1
+    fibre_cut: 1
+    config_change: 1
+- split: eval
+  kind: storm
+  count: 2
+  fault_types:
+    power_loss: 1
+- split: eval
+  kind: overlap
+  count: 2
+  fault_types:
+    card_failure: 1
+    software_crash: 1

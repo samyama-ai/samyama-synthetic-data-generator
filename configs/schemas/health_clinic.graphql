@@ -1,0 +1,85 @@
+# Health Clinic, Clinical Encounter & Claims Data Model (Base = 1,000 entities at scale=1.0)
+# Extends the 2023 Health Clinic GraphQL model with cross-entity temporal @after constraints,
+# Zipfian provider load, and clinical diagnosis + claim adjudication chains.
+
+type Patient @count(200) @pk(kind: "uuid") {
+  id: ID!
+  firstName: String!
+  lastName: String!
+  email: Email!
+  phone: Phone!
+  dateOfBirth: Date!
+  appointments: [Appointment!]!
+}
+
+type Doctor @count(50) @pk(kind: "uuid") {
+  id: ID!
+  firstName: String!
+  lastName: String!
+  email: Email!
+  specialization: Specialization!
+  appointments: [Appointment!]!
+}
+
+type Appointment @count(400) @pk(kind: "uuid") {
+  id: ID!
+  patient: Patient! @fk(dist: "uniform", edge: "FOR_PATIENT")
+  doctor: Doctor! @fk(dist: "zipf", s: 1.15, edge: "SEEN_BY")
+  appointmentDate: Date! @after(field: "patient.dateOfBirth", min_days: 6570, max_days: 20000)
+  appointmentTime: Time!
+  status: AppointmentStatus!
+}
+
+type Diagnosis @count(200) @pk(kind: "uuid") {
+  id: ID!
+  appointment: Appointment! @fk(dist: "uniform", edge: "DIAGNOSED_IN")
+  icd10Code: ICD10!
+  recordedDate: Date! @after(field: "appointment.appointmentDate", min_days: 0, max_days: 3)
+  severity: SeverityLevel!
+}
+
+type Claim @count(150) @pk(kind: "uuid") {
+  id: ID!
+  appointment: Appointment! @fk(dist: "uniform", edge: "GENERATES_CLAIM")
+  cptCode: CPT!
+  submissionDate: Date! @after(field: "appointment.appointmentDate", min_days: 1, max_days: 30)
+  adjudicationDate: Date! @after(field: "submissionDate", min_days: 2, max_days: 45)
+  adjudicationAmount: Money!
+  status: ClaimStatus!
+}
+
+enum Specialization {
+  CARDIOLOGY
+  DERMATOLOGY
+  NEUROLOGY
+  ONCOLOGY
+  PEDIATRICS
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELED
+}
+
+enum SeverityLevel {
+  MILD
+  MODERATE
+  SEVERE
+  CRITICAL
+}
+
+enum ClaimStatus {
+  SUBMITTED
+  ADJUDICATED
+  PAID
+  DENIED
+}
+
+scalar Email
+scalar Phone
+scalar Date
+scalar Time
+scalar ICD10
+scalar CPT
+scalar Money

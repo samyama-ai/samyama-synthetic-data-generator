@@ -1,0 +1,35 @@
+# Enterprise Banking Property-Graph Schema
+# Demonstrates @edge (first-class attributed edges), @derived (intra-row formulas),
+# @constraint (regex/range bounds), and @weights (weighted enums) from Samyama.ai/data_generator.
+
+type Account @count(100) @pk(kind: "prefix", prefix: "acc_") {
+    id: ID!
+    accountNumber: String! @constraint(pattern: "ACC-[0-9]{8}")
+    ownerName: String!
+    balance: Float! @constraint(min: 1000.0, max: 50000.0, decimals: 2)
+    holds: Float! @constraint(min: 0.0, max: 900.0, decimals: 2)
+    availableBalance: Float! @derived(formula: "balance - holds")
+    riskTier: RiskTier!
+}
+
+type Transaction @count(400) @pk(kind: "prefix", prefix: "txn_") @edge(from: "fromAccount", to: "toAccount", type: "TRANSFERRED") {
+    id: ID!
+    fromAccount: Account!
+    toAccount: Account! @fk(dist: "zipf", s: 1.2)
+    amount: Float! @constraint(min: 10.0, max: 20000.0, decimals: 2)
+    fee: Float! @derived(formula: "amount * 0.01")
+    isLargeTransfer: Boolean! @derived(formula: "amount > 10000")
+    channel: PaymentChannel!
+}
+
+enum RiskTier @weights(values: ["0.70", "0.20", "0.10"]) {
+    LOW
+    MEDIUM
+    HIGH
+}
+
+enum PaymentChannel @weights(values: ["0.50", "0.30", "0.20"]) {
+    WIRE
+    ACH
+    RTP
+}

@@ -1,0 +1,50 @@
+# Small demo: GÉANT 2012 backbone (40 PoPs, real), a modest NOC layer, 60 scenarios.
+# Every rate below is ASSUMED (no openly licensed telecom alarm log was found to calibrate
+# against); see README "Calibration".
+pack: telecom
+topology: ../graph_ws/telecom-kg/data/topology-zoo/Geant2012.graphml   # relative to the workspace (common_ws)
+start: "2026-01-05T00:00:00"
+slot_hours: 6                    # each scenario gets its own 6-hour window
+repair_median_ms: 5400000        # 90 min
+overlap_window_ms: 600000        # second fault within 10 min of the first
+
+network:
+  core_per_pop: 2
+  aggregation_per_pop: [2, 3]
+  access_per_pop: [6, 12]
+  ran_share: 0.6
+  dual_home_rate: 0.3
+  enterprise_vpns: 40
+
+alarms:
+  emit_prob: {root: 0.7, loss-of-signal: 0.9, isolation: 0.95, service: 0.8, congestion: 0.6, neighbour: 0.85}
+  los_delay_ms: 2000
+  poll_interval_ms: 300000       # NMS polls reachability every 5 min
+  service_delay_ms: 120000
+  flap_prob: 0.08
+  duplicate_prob: 0.05
+  clock_skew_ms: 3000
+  background_per_hour: 2
+  element_notify_ms: 1200              # one element's agent sends its notifications one at a time
+  neighbour_report_period_ms: 900000   # a live site detects a dead neighbour on its own 15-min measurement period
+  ran_neighbours: 6             # live radio sites that see a dead neighbour (same and adjacent PoPs)
+  cells_per_ran: 3              # up to this many link-failure alarms per neighbour
+  background_lead_ms: 3600000
+
+changes:
+  fault_after_change_prob: 0.15  # a fault preceded by a failed change on the same resource
+  unrelated_per_slot: 1.5
+
+tickets:
+  misgroup_prob: 0.1
+  background_attach_prob: 0.05
+  duplicate_incident_prob: 0.5
+
+scenarios:
+- {split: history, kind: single, count: 30,
+   fault_types: {card_failure: 3, device_failure: 1, software_crash: 2, port_failure: 3, fibre_cut: 2, config_change: 2, power_loss: 1}}
+- {split: eval, kind: single, count: 15,
+   fault_types: {card_failure: 3, device_failure: 1, software_crash: 2, port_failure: 3, fibre_cut: 2, config_change: 2, power_loss: 1}}
+- {split: eval, kind: storm, count: 5, fault_types: {fibre_cut: 1, power_loss: 1, device_failure: 1}}
+- {split: eval, kind: overlap, count: 10,
+   fault_types: {card_failure: 2, port_failure: 2, software_crash: 1, config_change: 1, fibre_cut: 1}}

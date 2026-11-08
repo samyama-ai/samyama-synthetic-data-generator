@@ -1,0 +1,43 @@
+# University Student-Course-Enrollment Data Model (Base = 1,000 entities at scale=1.0)
+
+type Department @count(50) @pk(kind: "prefix:dept") {
+  id: ID!
+  name: String!
+  buildingCode: String! @regex(pattern: "BLDG-[A-H]-[1-4][0-9]{2}")
+}
+
+type Course @count(150) @pk(kind: "prefix:crs") {
+  id: ID!
+  courseCode: String! @regex(pattern: "(CS|EE|BIO|MATH)-[1-6][0-9]{2}")
+  name: String!
+  instructor: String!
+  department: Department! @fk(dist: "uniform", edge: "OFFERED_BY")
+}
+
+type Student @count(300) @pk(kind: "uuid") {
+  id: ID!
+  firstName: String!
+  lastName: String!
+  email: Email!
+  matriculationDate: Date!
+  department: Department! @fk(dist: "zipf", s: 1.1, edge: "MAJORS_IN")
+  enrollments: [Enrollment!]!
+}
+
+type Enrollment @count(500) @pk(kind: "uuid") {
+  id: ID!
+  student: Student! @fk(dist: "uniform", edge: "ENROLLED_STUDENT")
+  course: Course! @fk(dist: "zipf", s: 1.25, edge: "ENROLLED_COURSE")
+  enrollmentDate: Date! @after(field: "student.matriculationDate", min_days: 0, max_days: 1095)
+  grade: Float!
+  term: AcademicTerm!
+}
+
+enum AcademicTerm {
+  FALL_2025
+  SPRING_2026
+  FALL_2026
+}
+
+scalar Email
+scalar Date

@@ -1,0 +1,5 @@
+{"src": "ietf-alarms:typedef/severity/indeterminate", "rel": "VALUE_OF", "dst": "ietf-alarms:typedef/severity"}
+{"src": "ietf-alarms:typedef/severity/warning", "rel": "VALUE_OF", "dst": "ietf-alarms:typedef/severity"}
+{"src": "ietf-alarms:typedef/severity/minor", "rel": "VALUE_OF", "dst": "ietf-alarms:typedef/severity"}
+{"src": "ietf-alarms:typedef/severity/major", "rel": "VALUE_OF", "dst": "ietf-alarms:typedef/severity"}
+{"src": "ietf-alarms:typedef/severity/critical", "rel": "VALUE_OF", "dst": "ietf-alarms:typedef/severity"}

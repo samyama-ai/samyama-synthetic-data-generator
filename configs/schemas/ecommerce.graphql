@@ -1,0 +1,53 @@
+# E-Commerce Customer-Order-Product Data Model (Base = 1,000 entities at scale=1.0)
+
+type Customer @count(250) @pk(kind: "uuid") {
+  id: ID!
+  firstName: String!
+  lastName: String!
+  email: Email!
+  registrationDate: Date!
+  orders: [Order!]!
+}
+
+type Product @count(100) @pk(kind: "uuid") {
+  id: ID!
+  sku: SKU!
+  name: String!
+  category: ProductCategory!
+  price: Money!
+}
+
+type Order @count(400) @pk(kind: "uuid") {
+  id: ID!
+  customer: Customer! @fk(dist: "zipf", s: 1.2, edge: "PLACED_BY")
+  orderDate: Date! @after(field: "customer.registrationDate", min_days: 1, max_days: 730)
+  status: OrderStatus!
+}
+
+type OrderItem @count(250) @pk(kind: "uuid") {
+  id: ID!
+  order: Order! @fk(dist: "uniform", edge: "PART_OF_ORDER")
+  product: Product! @fk(dist: "zipf", s: 1.3, edge: "OF_PRODUCT")
+  quantity: Int!
+  shippedDate: Date! @after(field: "order.orderDate", min_days: 1, max_days: 14)
+}
+
+enum ProductCategory {
+  NETWORKING
+  OPTICS
+  MEDICAL_DEVICES
+  SECURITY
+  CLOUD_SOFTWARE
+}
+
+enum OrderStatus {
+  PENDING
+  SHIPPED
+  DELIVERED
+  RETURNED
+}
+
+scalar Email
+scalar SKU
+scalar Date
+scalar Money

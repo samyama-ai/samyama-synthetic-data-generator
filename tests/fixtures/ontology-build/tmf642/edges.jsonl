@@ -1,0 +1,11 @@
+{"src": "tmf642:AlarmType/communicationsAlarm", "rel": "VALUE_OF", "dst": "tmf642:AlarmType"}
+{"src": "tmf642:AlarmType/processingErrorAlarm", "rel": "VALUE_OF", "dst": "tmf642:AlarmType"}
+{"src": "tmf642:AlarmType/environmentalAlarm", "rel": "VALUE_OF", "dst": "tmf642:AlarmType"}
+{"src": "tmf642:AlarmType/qualityOfServiceAlarm", "rel": "VALUE_OF", "dst": "tmf642:AlarmType"}
+{"src": "tmf642:AlarmType/equipmentAlarm", "rel": "VALUE_OF", "dst": "tmf642:AlarmType"}
+{"src": "tmf642:AlarmType/integrityViolation", "rel": "VALUE_OF", "dst": "tmf642:AlarmType"}
+{"src": "tmf642:AlarmType/operationalViolation", "rel": "VALUE_OF", "dst": "tmf642:AlarmType"}
+{"src": "tmf642:AlarmType/physicalViolation", "rel": "VALUE_OF", "dst": "tmf642:AlarmType"}
+{"src": "tmf642:AlarmType/securityService", "rel": "VALUE_OF", "dst": "tmf642:AlarmType"}
+{"src": "tmf642:AlarmType/mechanismViolation", "rel": "VALUE_OF", "dst": "tmf642:AlarmType"}
+{"src": "tmf642:AlarmType/timeDomainViolation", "rel": "VALUE_OF", "dst": "tmf642:AlarmType"}

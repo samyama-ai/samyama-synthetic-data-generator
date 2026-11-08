@@ -1,0 +1,13 @@
+{"id": "tmf642:Alarm", "label": "Concept", "name": "Alarm"}
+{"id": "tmf642:AlarmType", "label": "Concept", "name": "AlarmType"}
+{"id": "tmf642:AlarmType/communicationsAlarm", "label": "Concept", "name": "communicationsAlarm"}
+{"id": "tmf642:AlarmType/processingErrorAlarm", "label": "Concept", "name": "processingErrorAlarm"}
+{"id": "tmf642:AlarmType/environmentalAlarm", "label": "Concept", "name": "environmentalAlarm"}
+{"id": "tmf642:AlarmType/qualityOfServiceAlarm", "label": "Concept", "name": "qualityOfServiceAlarm"}
+{"id": "tmf642:AlarmType/equipmentAlarm", "label": "Concept", "name": "equipmentAlarm"}
+{"id": "tmf642:AlarmType/integrityViolation", "label": "Concept", "name": "integrityViolation"}
+{"id": "tmf642:AlarmType/operationalViolation", "label": "Concept", "name": "operationalViolation"}
+{"id": "tmf642:AlarmType/physicalViolation", "label": "Concept", "name": "physicalViolation"}
+{"id": "tmf642:AlarmType/securityService", "label": "Concept", "name": "securityService"}
+{"id": "tmf642:AlarmType/mechanismViolation", "label": "Concept", "name": "mechanismViolation"}
+{"id": "tmf642:AlarmType/timeDomainViolation", "label": "Concept", "name": "timeDomainViolation"}

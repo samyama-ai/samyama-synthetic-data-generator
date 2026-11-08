@@ -1,0 +1,63 @@
+{"id": "noria:Notification/ProbableCause/fileError", "label": "Concept", "name": "fileError", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/dataSetOrModemError", "label": "Concept", "name": "dataSetOrModemError", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/pumpFailure", "label": "Concept", "name": "pumpFailure", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/receiveFailure", "label": "Concept", "name": "receiveFailure", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/lossOfFrame", "label": "Concept", "name": "lossOfFrame", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/callEstablishmentError", "label": "Concept", "name": "callEstablishmentError", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/softwareProgramAbnormallyTerminated", "label": "Concept", "name": "softwareProgramAbnormallyTerminated", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/bandwidthReduced", "label": "Concept", "name": "bandwidthReduced", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/adapterError", "label": "Concept", "name": "adapterError", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/framingError", "label": "Concept", "name": "framingError", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/performanceDegraded", "label": "Concept", "name": "performanceDegraded", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/congestion", "label": "Concept", "name": "congestion", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/powerProblem", "label": "Concept", "name": "powerProblem", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/underlyingResourceUnavailable", "label": "Concept", "name": "adapterError", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/configurationOrCustomizationError", "label": "Concept", "name": "configurationOrCustomizationError", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/excessiveVibration", "label": "Concept", "name": "excessiveVibration", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/temperatureUnacceptable", "label": "Concept", "name": "temperatureUnacceptable", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/heatingOrVentilationOrCoolingSystemProblem", "label": "Concept", "name": "heatingOrVentilationOrCoolingSystemProblem", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/degradedSignal", "label": "Concept", "name": "degradedSignal", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/equipmentMalfunction", "label": "Concept", "name": "equipmentMalfunction", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/storageCapacityProblem", "label": "Concept", "name": "storageCapacityProblem", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/pressureUnacceptable", "label": "Concept", "name": "pressureUnacceptable", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/thresholdCrossed", "label": "Concept", "name": "thresholdCrossed", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/localNodeTransmissionError", "label": "Concept", "name": "localNodeTransmissionError", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/processorProblem", "label": "Concept", "name": "processorProblem", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/resourceAtOrNearingCapacity", "label": "Concept", "name": "resourceAtOrNearingCapacity", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/fireDetected", "label": "Concept", "name": "fireDetected", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/timingProblem", "label": "Concept", "name": "adapterError", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/floodDetected", "label": "Concept", "name": "floodDetected", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/materialSupplyExhausted", "label": "Concept", "name": "materialSupplyExhausted", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/communicationsProtocolError", "label": "Concept", "name": "communicationsProtocolError", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/ouputDeviceError", "label": "Concept", "name": "ouputDeviceError", "scheme": "ProbableCause"}
+{"id": "noria:ChangeRequest", "label": "Concept", "name": "ChangeRequest"}
+{"id": "noria:Notification/ProbableCause/queueSizeExceeded", "label": "Concept", "name": "queueSizeExceeded", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/responseTimeExcessive", "label": "Concept", "name": "responseTimeExcessive", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/retransmissionRateExcessive", "label": "Concept", "name": "retransmissionRateExcessive", "scheme": "ProbableCause"}
+{"id": "noria:EventRecord", "label": "Concept", "name": "EventRecord"}
+{"id": "noria:Notification/ProbableCause/toxicLeakDetected", "label": "Concept", "name": "toxicLeakDetected", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/applicationSubsystemFailure", "label": "Concept", "name": "applicationSubsystemFailure", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/cpuCyclesLimitExceeded", "label": "Concept", "name": "cpuCyclesLimitExceeded", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/communicationsSubsystemFailure", "label": "Concept", "name": "communicationsSubsystemFailure", "scheme": "ProbableCause"}
+{"id": "noria:NetworkInterface", "label": "Concept", "name": "NetworkInterface"}
+{"id": "noria:Notification/ProbableCause/humidityUnacceptable", "label": "Concept", "name": "humidityUnacceptable", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/versionMismatch", "label": "Concept", "name": "adapterError", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/corruptData", "label": "Concept", "name": "corruptData", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/inputOutputDeviceError", "label": "Concept", "name": "inputOutputDeviceError", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/transmitFailure", "label": "Concept", "name": "adapterError", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/lossOfSignal", "label": "Concept", "name": "lossOfSignal", "scheme": "ProbableCause"}
+{"id": "noria:Service", "label": "Concept", "name": "Service"}
+{"id": "noria:Notification/ProbableCause/dTE-DCEInterfaceError", "label": "Concept", "name": "dTE-DCEInterfaceError", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/multiplexerProblem", "label": "Concept", "name": "multiplexerProblem", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/transmitterFailure", "label": "Concept", "name": "transmitterFailure", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/leakDetected", "label": "Concept", "name": "leakDetected", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/inputDeviceError", "label": "Concept", "name": "inputDeviceError", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/remoteNodeTransmissionError", "label": "Concept", "name": "remoteNodeTransmissionError", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/outOfMemory", "label": "Concept", "name": "outOfMemory", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/softwareProgramError", "label": "Concept", "name": "softwareProgramError", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/lANError", "label": "Concept", "name": "lANError", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/receiverFailure", "label": "Concept", "name": "receiverFailure", "scheme": "ProbableCause"}
+{"id": "noria:TroubleTicket", "label": "Concept", "name": "TroubleTicket"}
+{"id": "noria:Resource", "label": "Concept", "name": "Resource"}
+{"id": "noria:Notification/ProbableCause/enclosureDoorOpen", "label": "Concept", "name": "enclosureDoorOpen", "scheme": "ProbableCause"}
+{"id": "noria:Notification/ProbableCause/softwareError", "label": "Concept", "name": "softwareError", "scheme": "ProbableCause"}

@@ -1,0 +1,27 @@
+[project]
+name = "samyama-sdg"
+version = "0.1.0"
+description = "Seeded, labelled synthetic data for a domain, from its samyama-ontologies vocabularies and its knowledge graph"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.26", "pyyaml>=6"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.5"]
+
+[project.scripts]
+sdg = "sdg.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/sdg"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 110

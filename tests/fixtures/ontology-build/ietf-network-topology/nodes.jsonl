@@ -1,0 +1,2 @@
+{"id": "ietf-network:networks/network/node", "label": "Concept", "name": "node"}
+{"id": "ietf-network-topology:networks/network/node/termination-point", "label": "Concept", "name": "termination-point"}

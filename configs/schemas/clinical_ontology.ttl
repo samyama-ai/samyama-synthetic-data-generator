@@ -1,0 +1,58 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix clinic: <https://samyama.ai/ontologies/clinic#> .
+
+# SKOS ConceptScheme -> Enum
+clinic:EncounterSeverity a skos:ConceptScheme .
+clinic:LOW a skos:Concept ; skos:inScheme clinic:EncounterSeverity .
+clinic:MODERATE a skos:Concept ; skos:inScheme clinic:EncounterSeverity .
+clinic:HIGH a skos:Concept ; skos:inScheme clinic:EncounterSeverity .
+clinic:CRITICAL a skos:Concept ; skos:inScheme clinic:EncounterSeverity .
+
+# Classes
+# @count(25) @pk(kind: "prefix", prefix: "phy_")
+clinic:Physician a owl:Class .
+
+# @count(100) @pk(kind: "prefix", prefix: "pat_")
+clinic:Patient a owl:Class .
+
+# @count(300) @pk(kind: "prefix", prefix: "enc_")
+clinic:ClinicalEncounter a owl:Class .
+
+# Datatype Properties
+clinic:firstName a owl:DatatypeProperty ;
+    rdfs:domain clinic:Patient ;
+    rdfs:range xsd:string .
+
+clinic:lastName a owl:DatatypeProperty ;
+    rdfs:domain clinic:Patient ;
+    rdfs:range xsd:string .
+
+clinic:dateOfBirth a owl:DatatypeProperty ;
+    rdfs:domain clinic:Patient ;
+    rdfs:range xsd:date .
+
+clinic:physicianEmail a owl:DatatypeProperty ;
+    rdfs:domain clinic:Physician ;
+    rdfs:range xsd:string .
+
+# @after(field: "hasPatient.dateOfBirth", min_days: 7300, max_days: 25000)
+clinic:encounterDate a owl:DatatypeProperty ;
+    rdfs:domain clinic:ClinicalEncounter ;
+    rdfs:range xsd:date .
+
+# Object Properties (Foreign Keys & Enum Links)
+clinic:hasPatient a owl:ObjectProperty ;
+    rdfs:domain clinic:ClinicalEncounter ;
+    rdfs:range clinic:Patient .
+
+# @fk(dist: "zipf", s: 1.2)
+clinic:attendedBy a owl:ObjectProperty ;
+    rdfs:domain clinic:ClinicalEncounter ;
+    rdfs:range clinic:Physician .
+
+clinic:severity a owl:ObjectProperty ;
+    rdfs:domain clinic:ClinicalEncounter ;
+    rdfs:range clinic:EncounterSeverity .

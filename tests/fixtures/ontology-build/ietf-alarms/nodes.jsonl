@@ -1,0 +1,7 @@
+{"id": "ietf-alarms:typedef/severity", "label": "Concept", "name": "severity"}
+{"id": "ietf-alarms:typedef/severity/indeterminate", "label": "Concept", "name": "indeterminate"}
+{"id": "ietf-alarms:typedef/severity/warning", "label": "Concept", "name": "warning"}
+{"id": "ietf-alarms:typedef/severity/minor", "label": "Concept", "name": "minor"}
+{"id": "ietf-alarms:typedef/severity/major", "label": "Concept", "name": "major"}
+{"id": "ietf-alarms:typedef/severity/critical", "label": "Concept", "name": "critical"}
+{"id": "ietf-alarms:alarms/alarm-list/alarm", "label": "Concept", "name": "alarm"}
