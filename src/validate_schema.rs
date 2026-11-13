@@ -135,6 +135,12 @@ pub fn validate_schema_output(
             let mut row_pk = String::new();
             for (f_idx, field) in ent.fields.iter().enumerate() {
                 let v = vals[f_idx];
+                if v.is_empty()
+                    && !field.non_null
+                    && !matches!(field.kind, CompiledFieldKind::PrimaryKey(_))
+                {
+                    continue;
+                }
                 match &field.kind {
                     CompiledFieldKind::PrimaryKey(_) => {
                         row_pk = v.to_string();

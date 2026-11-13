@@ -189,6 +189,8 @@ pub enum CompiledFieldKind {
         enum_name: String,
         values: Vec<String>,
         cumulative_weights: Option<Vec<f64>>,
+        /// `@given`: sample conditional on another enum field of the same row.
+        given: Option<GivenSpec>,
     },
     Value(CompiledValueGenerator),
     TemporalAfter {
@@ -199,6 +201,18 @@ pub enum CompiledFieldKind {
     Derived(DerivedFormula),
 }
 
+/// Conditional categorical spec (`@given(field: "parent", table: [...])`).
+///
+/// `cumulative[p]` is the cumulative distribution over this field's values given that the
+/// parent field took its `p`-th value. Stateless: the parent's value is recomputed from
+/// `(seed, entity, row, parent field)`, so the O(1)-memory property is preserved.
+#[derive(Clone, Debug)]
+pub struct GivenSpec {
+    pub parent_field: String,
+    pub parent_field_idx: usize,
+    pub cumulative: Vec<Vec<f64>>,
+}
+
 #[derive(Clone, Debug)]
 pub struct CompiledField {
     pub name: String,
@@ -206,6 +220,7 @@ pub struct CompiledField {
     pub raw_type: String,
     pub is_list: bool,
     pub non_null: bool,
+    pub null_prob: f64,
     pub kind: CompiledFieldKind,
 }
 
@@ -395,7 +410,9 @@ impl CompiledSchema {
                 binding_spec.labels.entry(ent.name.clone()).or_default();
             }
             let build_dir = ontologies_build.ok_or_else(|| {
-                anyhow!("schema uses @ontology directives but no --ontologies build path was provided")
+                anyhow!(
+                    "schema uses @ontology directives but no --ontologies build path was provided"
+                )
             })?;
             Some(bind(build_dir, &binding_spec)?)
         } else {
@@ -407,7 +424,10 @@ impl CompiledSchema {
         let mut enum_weights: BTreeMap<String, Vec<f64>> = BTreeMap::new();
         for en in &raw_enums {
             if let Some(d) = en.directives.iter().find(|d| d.name == "weights") {
-                if let Some(w_list) = d.list_args.get("values").or_else(|| d.list_args.get("items"))
+                if let Some(w_list) = d
+                    .list_args
+                    .get("values")
+                    .or_else(|| d.list_args.get("items"))
                 {
                     if let Some(cum) = parse_cumulative_weights(w_list) {
                         enum_weights.insert(en.name.clone(), cum);
@@ -466,12 +486,7 @@ impl CompiledSchema {
             } else {
                 ((ent.count as f64) * scale_factor).round().max(1.0) as u64
             };
-            let default_prefix = ent
-                .name
-                .chars()
-                .take(3)
-                .collect::<String>()
-                .to_lowercase();
+            let default_prefix = ent.name.chars().take(3).collect::<String>().to_lowercase();
             let mut entity_pk_kind = ent
                 .directives
                 .iter()
@@ -488,6 +503,7 @@ impl CompiledSchema {
 
             let mut pk_field_name = "id".to_string();
             let mut compiled_fields = Vec::new();
+            let mut given_pending: Vec<(String, String, Vec<f64>)> = Vec::new();
 
             for f in &ent.fields {
                 let has_explicit_fk_dir = f
@@ -516,8 +532,7 @@ impl CompiledSchema {
                     }
                     pk_field_name = f.name.clone();
                     CompiledFieldKind::PrimaryKey(entity_pk_kind.clone())
-                } else if let Some(derived_dir) =
-                    f.directives.iter().find(|d| d.name == "derived")
+                } else if let Some(derived_dir) = f.directives.iter().find(|d| d.name == "derived")
                 {
                     let formula_str = derived_dir
                         .args
@@ -593,6 +608,7 @@ impl CompiledSchema {
                         enum_name: f.base_type.clone(),
                         values: vals.clone(),
                         cumulative_weights: field_weights,
+                        given: None,
                     }
                 } else if let Some(after_dir) = f.directives.iter().find(|d| d.name == "after") {
                     let reference_path = after_dir
@@ -636,12 +652,101 @@ impl CompiledSchema {
                     CompiledFieldKind::Value(dict.resolve(&ent.name, &f.name, &f.base_type)?)
                 };
 
+                let null_prob =
+                    if let Some(nr_dir) = f.directives.iter().find(|d| d.name == "null_rate") {
+                        if f.non_null || is_pk {
+                            bail!(
+                                "{}.{} carries @null_rate on a non-null or primary-key field",
+                                ent.name,
+                                f.name
+                            );
+                        }
+                        let p: f64 = nr_dir
+                            .args
+                            .get("p")
+                            .or_else(|| nr_dir.args.get("rate"))
+                            .or(nr_dir.positional.as_ref())
+                            .ok_or_else(|| {
+                                anyhow!(
+                                    "{}.{} @null_rate directive requires `p` argument",
+                                    ent.name,
+                                    f.name
+                                )
+                            })?
+                            .parse()
+                            .map_err(|_| {
+                                anyhow!(
+                                    "{}.{} @null_rate `p` must be a float in [0.0, 1.0]",
+                                    ent.name,
+                                    f.name
+                                )
+                            })?;
+                        if !(0.0..=1.0).contains(&p) {
+                            bail!(
+                                "{}.{} @null_rate p={} must be within [0.0, 1.0]",
+                                ent.name,
+                                f.name,
+                                p
+                            );
+                        }
+                        p
+                    } else {
+                        0.0
+                    };
+
+                if let Some(gd) = f.directives.iter().find(|d| d.name == "given") {
+                    if !matches!(kind, CompiledFieldKind::Enum { .. }) {
+                        bail!(
+                            "{}.{} carries @given but is not an enum-typed field",
+                            ent.name,
+                            f.name
+                        );
+                    }
+                    let parent = gd
+                        .args
+                        .get("field")
+                        .or(gd.positional.as_ref())
+                        .ok_or_else(|| {
+                            anyhow!("{}.{} @given requires a `field` argument", ent.name, f.name)
+                        })?
+                        .clone();
+                    let table = gd.list_args.get("table").ok_or_else(|| {
+                        anyhow!(
+                            "{}.{} @given requires a `table` list argument",
+                            ent.name,
+                            f.name
+                        )
+                    })?;
+                    let mut flat = Vec::with_capacity(table.len());
+                    for t in table {
+                        let v: f64 = t.parse().map_err(|_| {
+                            anyhow!(
+                                "{}.{} @given table entry {:?} is not a number",
+                                ent.name,
+                                f.name,
+                                t
+                            )
+                        })?;
+                        if !v.is_finite() || v < 0.0 {
+                            bail!(
+                                "{}.{} @given table entry {} must be finite and >= 0",
+                                ent.name,
+                                f.name,
+                                v
+                            );
+                        }
+                        flat.push(v);
+                    }
+                    given_pending.push((f.name.clone(), parent, flat));
+                }
+
                 compiled_fields.push(CompiledField {
                     name: f.name.clone(),
                     name_hash: fnv1a64(f.name.as_bytes()),
                     raw_type: f.base_type.clone(),
                     is_list: f.is_list,
                     non_null: f.non_null,
+                    null_prob,
                     kind,
                 });
             }
@@ -659,9 +764,109 @@ impl CompiledSchema {
                         raw_type: "ID".to_string(),
                         is_list: false,
                         non_null: true,
+                        null_prob: 0.0,
                         kind: CompiledFieldKind::PrimaryKey(entity_pk_kind.clone()),
                     },
                 );
+            }
+
+            // Resolve `@given` conditional enums now that field indices are final.
+            for (child_name, parent_name, flat) in &given_pending {
+                let child_idx = compiled_fields
+                    .iter()
+                    .position(|cf| &cf.name == child_name)
+                    .expect("given child field exists");
+                let parent_idx = compiled_fields
+                    .iter()
+                    .position(|cf| &cf.name == parent_name)
+                    .ok_or_else(|| {
+                        anyhow!(
+                            "{}.{} @given references unknown field {:?}",
+                            ent.name,
+                            child_name,
+                            parent_name
+                        )
+                    })?;
+                if parent_idx == child_idx {
+                    bail!("{}.{} @given references itself", ent.name, child_name);
+                }
+                let parent_card = match &compiled_fields[parent_idx].kind {
+                    CompiledFieldKind::Enum { values, .. } => values.len(),
+                    _ => bail!(
+                        "{}.{} @given parent {:?} must be an enum-typed field",
+                        ent.name,
+                        child_name,
+                        parent_name
+                    ),
+                };
+                let child_card = match &compiled_fields[child_idx].kind {
+                    CompiledFieldKind::Enum { values, .. } => values.len(),
+                    _ => unreachable!(),
+                };
+                if flat.len() != parent_card * child_card {
+                    bail!(
+                        "{}.{} @given table has {} entries, expected {} parent values x {} child values = {}",
+                        ent.name,
+                        child_name,
+                        flat.len(),
+                        parent_card,
+                        child_card,
+                        parent_card * child_card
+                    );
+                }
+                let mut cumulative = Vec::with_capacity(parent_card);
+                for pi in 0..parent_card {
+                    let row = &flat[pi * child_card..(pi + 1) * child_card];
+                    let sum: f64 = row.iter().sum();
+                    if sum <= 0.0 {
+                        bail!(
+                            "{}.{} @given row {} (parent value index) sums to zero",
+                            ent.name,
+                            child_name,
+                            pi
+                        );
+                    }
+                    let mut acc = 0.0;
+                    let mut cum: Vec<f64> = row
+                        .iter()
+                        .map(|w| {
+                            acc += w / sum;
+                            acc
+                        })
+                        .collect();
+                    if let Some(last) = cum.last_mut() {
+                        *last = 1.0;
+                    }
+                    cumulative.push(cum);
+                }
+                if let CompiledFieldKind::Enum { given, .. } = &mut compiled_fields[child_idx].kind
+                {
+                    *given = Some(GivenSpec {
+                        parent_field: parent_name.clone(),
+                        parent_field_idx: parent_idx,
+                        cumulative,
+                    });
+                }
+            }
+            // Reject @given cycles (walk each chain; length bounded by field count).
+            for (child_name, _, _) in &given_pending {
+                let mut cur = compiled_fields
+                    .iter()
+                    .position(|cf| &cf.name == child_name)
+                    .expect("given child field exists");
+                for _ in 0..=compiled_fields.len() {
+                    match &compiled_fields[cur].kind {
+                        CompiledFieldKind::Enum { given: Some(g), .. } => cur = g.parent_field_idx,
+                        _ => break,
+                    }
+                    if &compiled_fields[cur].name == child_name {
+                        bail!(
+                            "{}.{} @given forms a dependency cycle",
+                            ent.name,
+                            child_name
+                        );
+                    }
+                }
             }
 
             // Check if entity carries first-class `@edge(from: "...", to: "...", type: "...")`
@@ -845,7 +1050,10 @@ fn directives_to_rule(directives: &[ParsedDirective]) -> Option<AttributeRuleSpe
                 }
             }
             "values" => {
-                if let Some(items) = d.list_args.get("items").or_else(|| d.list_args.get("values"))
+                if let Some(items) = d
+                    .list_args
+                    .get("items")
+                    .or_else(|| d.list_args.get("values"))
                 {
                     rule.values = Some(items.clone());
                     matched = true;

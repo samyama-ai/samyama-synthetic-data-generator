@@ -48,6 +48,14 @@ uv run sdg generate configs/telecom/small.yaml --out out/telecom-small     # ~2 
 uv run sdg validate out/telecom-small                                      # writes realism.json
 ```
 
+## End-to-end demo: dataset → fit → synthetic → equivalence and privacy audit
+
+`examples/adult_e2e/` takes a public dataset (UCI Adult), applies a differentially private
+fit, generates synthetic data from the resulting spec, and evaluates it with `sdg-eval`:
+utility (train-on-synthetic, test-on-real), fidelity, and an empirical privacy audit with a
+leaky and a naive control. See `examples/adult_e2e/README.md` for the result and its limits.
+Conditional dependencies between columns are expressed with `@given(field: "parent", table: [...])`.
+
 ## Declarative GraphQL Schema Compiler (`configs/schemas/`)
 
 Any multi-entity relational or property-graph dataset can be specified in ~50 lines of GraphQL SDL without writing domain code. Example (`configs/schemas/health_clinic.graphql`):
@@ -234,7 +242,8 @@ records that.
 ## Citing this
 
 This repository is the open-source compiler and generator artifact for:
-1. *Schema-Driven Synthetic Data Generation as a Compiler Problem: Multi-Frontend Lowering,
-   O(1)-Memory Relational/Graph Integrity, and Causal Ground Truth* (Samyama Research Team, 2026).
+1. *Samyama-SDG: A Declarative GraphQL @count and Regex/Ontology Synthetic Data Compiler with
+   O(1)-Memory Referential Integrity and Causal Ground Truth* (Mandarapu and Kunkunuru, 2026,
+   arXiv:2611.11295).
 2. *Every Alarm Has a Cause: An Open Generator of Telecom Alarm Storms with Exact Root Causes,
    Bound to NORIA-O, RFC 8632 and TMF642* (Mandarapu and Kunkunuru, 2026).

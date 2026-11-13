@@ -27,11 +27,41 @@ fn test_graphql_schema_determinism_and_referential_integrity() {
     let dir_b = tmp.join("run_b");
     let dir_c = tmp.join("run_c");
 
-    let ma = execute_schema(&compiled, 20261019, &dir_a, OutputFormat::Both, 1.0, None, None).unwrap();
-    let mb = execute_schema(&compiled, 20261019, &dir_b, OutputFormat::Both, 1.0, None, None).unwrap();
-    let mc = execute_schema(&compiled, 20261020, &dir_c, OutputFormat::Both, 1.0, None, None).unwrap();
+    let ma = execute_schema(
+        &compiled,
+        20261019,
+        &dir_a,
+        OutputFormat::Both,
+        1.0,
+        None,
+        None,
+    )
+    .unwrap();
+    let mb = execute_schema(
+        &compiled,
+        20261019,
+        &dir_b,
+        OutputFormat::Both,
+        1.0,
+        None,
+        None,
+    )
+    .unwrap();
+    let mc = execute_schema(
+        &compiled,
+        20261020,
+        &dir_c,
+        OutputFormat::Both,
+        1.0,
+        None,
+        None,
+    )
+    .unwrap();
 
-    assert_eq!(ma.outputs, mb.outputs, "same seed must produce identical file SHA-256s");
+    assert_eq!(
+        ma.outputs, mb.outputs,
+        "same seed must produce identical file SHA-256s"
+    );
     assert_ne!(
         ma.outputs.get("Patient.csv"),
         mc.outputs.get("Patient.csv"),
@@ -39,10 +69,17 @@ fn test_graphql_schema_determinism_and_referential_integrity() {
     );
 
     let rep = validate_schema_output(&compiled, &dir_a).unwrap();
-    assert_eq!(rep.summary.conformance_errors, 0, "errors: {:?}", rep.errors);
+    assert_eq!(
+        rep.summary.conformance_errors, 0,
+        "errors: {:?}",
+        rep.errors
+    );
     assert_eq!(rep.summary.rows_checked, 1000);
     assert_eq!(rep.summary.foreign_keys_checked, 400 * 2 + 200 + 150);
-    assert_eq!(rep.summary.temporal_constraints_checked, 400 + 200 + 150 * 2);
+    assert_eq!(
+        rep.summary.temporal_constraints_checked,
+        400 + 200 + 150 * 2
+    );
 
     let _ = fs::remove_dir_all(&tmp);
 }
@@ -116,9 +153,15 @@ fn test_field_stream_independence_under_schema_evolution() {
         // v1 columns: [id, firstName, email, dateOfBirth]
         // v2 columns: [id, firstName, phone, email, dateOfBirth]
         assert_eq!(c1[0], c2[0], "id changed when phone field was inserted");
-        assert_eq!(c1[1], c2[1], "firstName changed when phone field was inserted");
+        assert_eq!(
+            c1[1], c2[1],
+            "firstName changed when phone field was inserted"
+        );
         assert_eq!(c1[2], c2[3], "email changed when phone field was inserted");
-        assert_eq!(c1[3], c2[4], "dateOfBirth changed when phone field was inserted");
+        assert_eq!(
+            c1[3], c2[4],
+            "dateOfBirth changed when phone field was inserted"
+        );
     }
 
     let _ = fs::remove_dir_all(&tmp);
@@ -131,7 +174,8 @@ fn test_ecommerce_and_university_schemas_validate_cleanly() {
     let _ = fs::remove_dir_all(&tmp);
 
     for name in ["ecommerce", "university"] {
-        let sdl = fs::read_to_string(root.join(format!("configs/schemas/{}.graphql", name))).unwrap();
+        let sdl =
+            fs::read_to_string(root.join(format!("configs/schemas/{}.graphql", name))).unwrap();
         let dict = DataDictionary::built_in().unwrap();
         let compiled = CompiledSchema::compile(&sdl, dict, None, 1.0, &BTreeMap::new()).unwrap();
         let out = tmp.join(name);
@@ -187,7 +231,10 @@ fn test_graphql_ontology_binding_and_unknown_concept_rejection() {
         1.0,
         &BTreeMap::new(),
     );
-    assert!(err.is_err(), "unknown ontology concept must fail compilation");
+    assert!(
+        err.is_err(),
+        "unknown ontology concept must fail compilation"
+    );
 }
 
 #[test]
@@ -209,7 +256,10 @@ fn test_cyclic_foreign_key_schema_rejected_at_compile_time() {
         1.0,
         &BTreeMap::new(),
     );
-    assert!(res.is_err(), "cyclic scalar FK dependency must fail topological sort");
+    assert!(
+        res.is_err(),
+        "cyclic scalar FK dependency must fail topological sort"
+    );
 }
 
 #[test]
@@ -236,20 +286,27 @@ fn test_rust_telecom_pack_generation_and_validation() {
     let _ = fs::remove_dir_all(&tmp);
 }
 
-
 #[test]
 fn test_sql_ddl_frontend_health_clinic_end_to_end() {
     let root = repo_root();
     let sql_path = root.join("configs/schemas/health_clinic.sql");
     let dict = DataDictionary::built_in().unwrap();
-    let compiled = CompiledSchema::compile_file(&sql_path, dict, None, 1.0, &BTreeMap::new()).unwrap();
+    let compiled =
+        CompiledSchema::compile_file(&sql_path, dict, None, 1.0, &BTreeMap::new()).unwrap();
     assert_eq!(compiled.entities.len(), 4);
 
     let tmp = std::env::temp_dir().join("sdg_rust_test_sql_frontend");
     let _ = fs::remove_dir_all(&tmp);
-    let manifest =
-        execute_schema(&compiled, 20261019, &tmp, OutputFormat::Both, 1.0, Some(&sql_path), None)
-            .unwrap();
+    let manifest = execute_schema(
+        &compiled,
+        20261019,
+        &tmp,
+        OutputFormat::Both,
+        1.0,
+        Some(&sql_path),
+        None,
+    )
+    .unwrap();
     assert_eq!(manifest.total_records, 50 + 200 + 500 + 250);
 
     let rep = validate_schema_output(&compiled, &tmp).unwrap();
@@ -270,15 +327,23 @@ fn test_turtle_ontology_frontend_end_to_end() {
     let root = repo_root();
     let ttl_path = root.join("configs/schemas/clinical_ontology.ttl");
     let dict = DataDictionary::built_in().unwrap();
-    let compiled = CompiledSchema::compile_file(&ttl_path, dict, None, 1.0, &BTreeMap::new()).unwrap();
+    let compiled =
+        CompiledSchema::compile_file(&ttl_path, dict, None, 1.0, &BTreeMap::new()).unwrap();
     assert_eq!(compiled.entities.len(), 3);
     assert!(compiled.enums.contains_key("EncounterSeverity"));
 
     let tmp = std::env::temp_dir().join("sdg_rust_test_ttl_frontend");
     let _ = fs::remove_dir_all(&tmp);
-    let manifest =
-        execute_schema(&compiled, 20261019, &tmp, OutputFormat::Both, 1.0, Some(&ttl_path), None)
-            .unwrap();
+    let manifest = execute_schema(
+        &compiled,
+        20261019,
+        &tmp,
+        OutputFormat::Both,
+        1.0,
+        Some(&ttl_path),
+        None,
+    )
+    .unwrap();
     assert_eq!(manifest.total_records, 25 + 100 + 300);
 
     let rep = validate_schema_output(&compiled, &tmp).unwrap();
@@ -299,13 +364,21 @@ fn test_first_class_edge_and_derived_and_weighted_enums() {
     let root = repo_root();
     let gql_path = root.join("configs/schemas/banking_graph.graphql");
     let dict = DataDictionary::built_in().unwrap();
-    let compiled = CompiledSchema::compile_file(&gql_path, dict, None, 1.0, &BTreeMap::new()).unwrap();
+    let compiled =
+        CompiledSchema::compile_file(&gql_path, dict, None, 1.0, &BTreeMap::new()).unwrap();
 
     let tmp = std::env::temp_dir().join("sdg_rust_test_banking_graph");
     let _ = fs::remove_dir_all(&tmp);
-    let manifest =
-        execute_schema(&compiled, 20261019, &tmp, OutputFormat::Both, 1.0, Some(&gql_path), None)
-            .unwrap();
+    let manifest = execute_schema(
+        &compiled,
+        20261019,
+        &tmp,
+        OutputFormat::Both,
+        1.0,
+        Some(&gql_path),
+        None,
+    )
+    .unwrap();
     assert_eq!(manifest.total_records, 500);
     assert_eq!(manifest.counts.relations.get("TRANSFERRED"), Some(&400));
 
@@ -359,4 +432,153 @@ fn test_first_class_edge_and_derived_and_weighted_enums() {
     assert!(sample_edge.get("channel").is_some());
 
     let _ = fs::remove_dir_all(&tmp);
+}
+
+#[test]
+fn test_nullable_field_null_rate_directive_and_validation() {
+    let sdl = r#"
+        type Customer @count(500) @pk(kind: "prefix", prefix: "cust_") {
+            id: ID!
+            segment: Segment!
+            daysSincePayroll: Int @constraint(min: 0, max: 365) @null_rate(p: 0.35)
+        }
+        enum Segment @weights(values: ["0.60", "0.40"]) {
+            RETAIL
+            BUSINESS
+        }
+    "#;
+    let dict = DataDictionary::built_in().unwrap();
+    let compiled = CompiledSchema::compile(sdl, dict, None, 1.0, &BTreeMap::new()).unwrap();
+
+    let tmp = std::env::temp_dir().join("sdg_rust_test_null_rate");
+    let _ = fs::remove_dir_all(&tmp);
+    execute_schema(
+        &compiled,
+        20261019,
+        &tmp,
+        OutputFormat::Both,
+        1.0,
+        None,
+        None,
+    )
+    .unwrap();
+
+    let rep = validate_schema_output(&compiled, &tmp).unwrap();
+    assert_eq!(
+        rep.summary.conformance_errors, 0,
+        "errors: {:?}",
+        rep.errors
+    );
+
+    let csv_text = fs::read_to_string(tmp.join("Customer.csv")).unwrap();
+    let mut null_rows = 0usize;
+    for line in csv_text.lines().skip(1) {
+        let cols: Vec<&str> = line.split(',').collect();
+        if cols[2].is_empty() {
+            null_rows += 1;
+        }
+    }
+    // Expected ~175 nulls out of 500 (35%); check well within [110, 240]
+    assert!(
+        (110..=240).contains(&null_rows),
+        "unexpected null_rows={} out of 500 for p=0.35",
+        null_rows
+    );
+
+    let _ = fs::remove_dir_all(&tmp);
+}
+
+const GIVEN_SDL: &str = r#"
+    type Person @count(20000) @pk(kind: "uuid") {
+        id: ID!
+        edu: Edu! @weights(values: [0.5, 0.5])
+        income: Income! @given(field: "edu", table: [0.9, 0.1, 0.3, 0.7])
+    }
+    enum Edu { LOW HIGH }
+    enum Income { SMALL BIG }
+"#;
+
+fn compile_given(sdl: &str) -> anyhow::Result<CompiledSchema> {
+    let dict = DataDictionary::built_in().unwrap();
+    CompiledSchema::compile(sdl, dict, None, 1.0, &BTreeMap::new())
+}
+
+#[test]
+fn test_given_conditional_enum_reproduces_conditional_frequencies_and_is_deterministic() {
+    let compiled = compile_given(GIVEN_SDL).unwrap();
+    let tmp = std::env::temp_dir().join("sdg_given_test");
+    let _ = fs::remove_dir_all(&tmp);
+    let a = execute_schema(
+        &compiled,
+        7,
+        &tmp.join("a"),
+        OutputFormat::Csv,
+        1.0,
+        None,
+        None,
+    )
+    .unwrap();
+    let b = execute_schema(
+        &compiled,
+        7,
+        &tmp.join("b"),
+        OutputFormat::Csv,
+        1.0,
+        None,
+        None,
+    )
+    .unwrap();
+    assert_eq!(a.outputs, b.outputs, "@given must stay deterministic");
+
+    let csv = fs::read_to_string(tmp.join("a/Person.csv")).unwrap();
+    let mut lines = csv.lines();
+    let header: Vec<&str> = lines.next().unwrap().split(',').collect();
+    let ie = header.iter().position(|h| *h == "edu").unwrap();
+    let ii = header.iter().position(|h| *h == "income").unwrap();
+    let (mut low, mut low_big, mut high, mut high_big) = (0f64, 0f64, 0f64, 0f64);
+    for l in lines {
+        let c: Vec<&str> = l.split(',').collect();
+        if c[ie] == "LOW" {
+            low += 1.0;
+            if c[ii] == "BIG" {
+                low_big += 1.0;
+            }
+        } else {
+            high += 1.0;
+            if c[ii] == "BIG" {
+                high_big += 1.0;
+            }
+        }
+    }
+    // target P(BIG|LOW)=0.1, P(BIG|HIGH)=0.7; ~10k rows per arm -> sd ~0.005
+    assert!(
+        (low_big / low - 0.1).abs() < 0.02,
+        "P(BIG|LOW)={}",
+        low_big / low
+    );
+    assert!(
+        (high_big / high - 0.7).abs() < 0.02,
+        "P(BIG|HIGH)={}",
+        high_big / high
+    );
+    let _ = fs::remove_dir_all(&tmp);
+}
+
+#[test]
+fn test_given_rejects_cycle_bad_arity_unknown_parent_and_self() {
+    let cyc = r#"
+        type P @count(10) @pk(kind: "uuid") {
+            id: ID!
+            a: E! @given(field: "b", table: [1, 1, 1, 1])
+            b: E! @given(field: "a", table: [1, 1, 1, 1])
+        }
+        enum E { X Y }
+    "#;
+    assert!(format!("{:#}", compile_given(cyc).unwrap_err()).contains("cycle"));
+    let arity = GIVEN_SDL.replace("[0.9, 0.1, 0.3, 0.7]", "[0.9, 0.1, 0.3]");
+    assert!(format!("{:#}", compile_given(&arity).unwrap_err()).contains("child values = 4"));
+    let unk = GIVEN_SDL.replace("field: \"edu\"", "field: \"nope\"");
+    assert!(format!("{:#}", compile_given(&unk).unwrap_err()).contains("unknown field"));
+    let zero = GIVEN_SDL.replace("[0.9, 0.1, 0.3, 0.7]", "[0, 0, 0.3, 0.7]");
+    assert!(format!("{:#}", compile_given(&zero).unwrap_err()).contains("sums to zero"));
 }

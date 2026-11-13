@@ -17,6 +17,7 @@ written down as fact is worse than the silence it replaces.
 | [RFC 8345](https://www.rfc-editor.org/rfc/rfc8345) (network topology YANG) | node and termination-point classes, bound to Device and Port | Simplified BSD, IETF Trust. | 2026-10-21 |
 | [TMF642 Alarm Management API](https://www.tmforum.org/oda/open-apis/) | the `AlarmType` enum, bound to `alarm_type` | Apache-2.0, TM Forum. | 2026-10-21 |
 | [Internet Topology Zoo](http://www.topology-zoo.org/) | the backbone graphs (GÉANT 2012, Abilene, Cogentco): PoPs and the links between them | CC BY 4.0. Redistribution and adaptation permitted with attribution. | 2026-10-21 |
+| [UCI Adult (Census Income)](https://archive.ics.uci.edu/dataset/2/adult) | demo only: downloaded by `examples/adult_e2e/fetch.sh`, never vendored; the repo ships a DP-fitted spec of noisy parameters, not rows | CC BY 4.0 (Becker & Kohavi, 1996). Redistribution and adaptation permitted with attribution. | 2026-11-13 |
 
 `tests/fixtures/ontology-build/` holds a **derived redistribution** of the first four, as
 flattened JSONL. The NORIA-O directory therefore carries `LICENSE.txt` and `NOTICE.md`,

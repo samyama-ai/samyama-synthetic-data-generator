@@ -8,9 +8,7 @@
 //! - First-class attributed property-graph edges (`@edge(from: "...", to: "...", type: "...")`),
 //! - Data-parallel Rayon chunk formatting with deterministic ordered streaming and on-the-fly SHA-256.
 
-use crate::dictionary::{
-    format_date_from_epoch_days, CompiledValueGenerator, DistSpec,
-};
+use crate::dictionary::{format_date_from_epoch_days, CompiledValueGenerator, DistSpec};
 use crate::ontology::sha256_file;
 use crate::rng::SeekableRng;
 use crate::schema::{
@@ -243,8 +241,7 @@ fn eval_numeric_field_f64(
             let Some(f) = ent.fields.iter().find(|x| x.name == *fname) else {
                 return 0.0;
             };
-            let mut rng =
-                SeekableRng::for_field_hashes(seed, ent.name_hash, row_idx, f.name_hash);
+            let mut rng = SeekableRng::for_field_hashes(seed, ent.name_hash, row_idx, f.name_hash);
             match &f.kind {
                 CompiledFieldKind::Value(CompiledValueGenerator::IntDist(d)) => {
                     sample_dist_i64(&mut rng, d) as f64
@@ -323,6 +320,43 @@ fn eval_derived_numeric(
     }
 }
 
+/// Index of the value an enum field takes on `row_idx`.
+///
+/// Shared by emission and by `@given` children, which recompute their parent's value
+/// statelessly from `(seed, entity, row, parent field)` instead of buffering it.
+fn enum_value_index(ent: &CompiledEntity, seed: u64, row_idx: u64, field: &CompiledField) -> usize {
+    let (values, cumulative_weights, given) = match &field.kind {
+        CompiledFieldKind::Enum {
+            values,
+            cumulative_weights,
+            given,
+            ..
+        } => (values, cumulative_weights, given),
+        _ => return 0,
+    };
+    let mut rng = SeekableRng::for_field_hashes(seed, ent.name_hash, row_idx, field.name_hash);
+    if let Some(g) = given {
+        let parent = &ent.fields[g.parent_field_idx];
+        let pi = enum_value_index(ent, seed, row_idx, parent);
+        let cum = &g.cumulative[pi];
+        let u = rng.next_f64();
+        return cum
+            .iter()
+            .position(|&c| u <= c)
+            .unwrap_or(values.len().saturating_sub(1));
+    }
+    if let Some(cum) = cumulative_weights {
+        if cum.len() == values.len() {
+            let u = rng.next_f64();
+            return cum
+                .iter()
+                .position(|&c| u <= c)
+                .unwrap_or(values.len().saturating_sub(1));
+        }
+    }
+    rng.integers(values.len() as u64) as usize
+}
+
 /// Format a single field value into `val_buf` and return whether it is numeric/boolean (for unquoted JSON).
 #[inline]
 pub fn eval_field_into(
@@ -335,6 +369,20 @@ pub fn eval_field_into(
 ) -> bool {
     val_buf.clear();
     let ent = &schema.entities[entity_idx];
+    if !field.non_null
+        && field.null_prob > 0.0
+        && !matches!(field.kind, CompiledFieldKind::PrimaryKey(_))
+    {
+        let mut null_rng = SeekableRng::for_field_hashes(
+            seed,
+            ent.name_hash,
+            row_idx,
+            field.name_hash ^ 0x4E55_4C4C_5F52_4154,
+        );
+        if null_rng.next_f64() < field.null_prob {
+            return true;
+        }
+    }
     match &field.kind {
         CompiledFieldKind::PrimaryKey(pk) => {
             pk.write_pk(seed, ent.name_hash, row_idx, val_buf);
@@ -345,15 +393,8 @@ pub fn eval_field_into(
             dist,
             ..
         } => {
-            let parent_idx = eval_fk_target_index(
-                schema,
-                seed,
-                ent,
-                row_idx,
-                field,
-                *target_entity_idx,
-                dist,
-            );
+            let parent_idx =
+                eval_fk_target_index(schema, seed, ent, row_idx, field, *target_entity_idx, dist);
             let target_ent = &schema.entities[*target_entity_idx];
             target_ent
                 .pk_kind
@@ -386,25 +427,9 @@ pub fn eval_field_into(
             }
             false
         }
-        CompiledFieldKind::Enum {
-            values,
-            cumulative_weights,
-            ..
-        } => {
-            let mut rng =
-                SeekableRng::for_field_hashes(seed, ent.name_hash, row_idx, field.name_hash);
-            if let Some(cum) = cumulative_weights {
-                if cum.len() == values.len() {
-                    let u = rng.next_f64();
-                    let idx = cum
-                        .iter()
-                        .position(|&c| u <= c)
-                        .unwrap_or(values.len().saturating_sub(1));
-                    val_buf.push_str(&values[idx]);
-                    return false;
-                }
-            }
-            val_buf.push_str(rng.choose(values));
+        CompiledFieldKind::Enum { values, .. } => {
+            let idx = enum_value_index(ent, seed, row_idx, field);
+            val_buf.push_str(&values[idx]);
             false
         }
         CompiledFieldKind::TemporalAfter { .. } => {
@@ -607,13 +632,20 @@ pub fn execute_schema(
                                         edge_src_buf.push_str(&val_buf);
                                     } else if f_idx == edge_spec.to_field_idx {
                                         edge_dst_buf.push_str(&val_buf);
-                                    } else if !matches!(field.kind, CompiledFieldKind::PrimaryKey(_))
-                                    {
+                                    } else if !matches!(
+                                        field.kind,
+                                        CompiledFieldKind::PrimaryKey(_)
+                                    ) {
                                         edge_props_buf.extend_from_slice(b",\"");
                                         edge_props_buf.extend_from_slice(field.name.as_bytes());
                                         edge_props_buf.extend_from_slice(b"\":");
                                         if is_raw_json {
-                                            edge_props_buf.extend_from_slice(val_buf.as_bytes());
+                                            if val_buf.is_empty() {
+                                                edge_props_buf.extend_from_slice(b"null");
+                                            } else {
+                                                edge_props_buf
+                                                    .extend_from_slice(val_buf.as_bytes());
+                                            }
                                         } else {
                                             edge_props_buf.push(b'"');
                                             edge_props_buf.extend_from_slice(val_buf.as_bytes());
@@ -637,9 +669,7 @@ pub fn execute_schema(
                                 edges_buf.push(b'"');
                                 edges_buf.extend_from_slice(&edge_props_buf);
                                 edges_buf.extend_from_slice(b",\"synthetic\":true}\n");
-                                *rel_counts
-                                    .entry(edge_spec.edge_label.clone())
-                                    .or_insert(0) += 1;
+                                *rel_counts.entry(edge_spec.edge_label.clone()).or_insert(0) += 1;
                             }
                             continue;
                         }
@@ -673,14 +703,16 @@ pub fn execute_schema(
                                 match &field.kind {
                                     CompiledFieldKind::PrimaryKey(_) => {}
                                     CompiledFieldKind::ForeignKey { edge_label, .. } => {
-                                        edges_buf.extend_from_slice(b"{\"src\":\"");
-                                        edges_buf.extend_from_slice(pk_buf.as_bytes());
-                                        edges_buf.extend_from_slice(b"\",\"rel\":\"");
-                                        edges_buf.extend_from_slice(edge_label.as_bytes());
-                                        edges_buf.extend_from_slice(b"\",\"dst\":\"");
-                                        edges_buf.extend_from_slice(val_buf.as_bytes());
-                                        edges_buf.extend_from_slice(b"\"}\n");
-                                        *rel_counts.entry(edge_label.clone()).or_insert(0) += 1;
+                                        if !val_buf.is_empty() {
+                                            edges_buf.extend_from_slice(b"{\"src\":\"");
+                                            edges_buf.extend_from_slice(pk_buf.as_bytes());
+                                            edges_buf.extend_from_slice(b"\",\"rel\":\"");
+                                            edges_buf.extend_from_slice(edge_label.as_bytes());
+                                            edges_buf.extend_from_slice(b"\",\"dst\":\"");
+                                            edges_buf.extend_from_slice(val_buf.as_bytes());
+                                            edges_buf.extend_from_slice(b"\"}\n");
+                                            *rel_counts.entry(edge_label.clone()).or_insert(0) += 1;
+                                        }
                                     }
                                     CompiledFieldKind::ForeignKeyList { edge_label, .. } => {
                                         for target_pk in val_buf.split(';') {
@@ -703,7 +735,11 @@ pub fn execute_schema(
                                         nodes_buf.extend_from_slice(field.name.as_bytes());
                                         nodes_buf.extend_from_slice(b"\":");
                                         if is_raw_json {
-                                            nodes_buf.extend_from_slice(val_buf.as_bytes());
+                                            if val_buf.is_empty() {
+                                                nodes_buf.extend_from_slice(b"null");
+                                            } else {
+                                                nodes_buf.extend_from_slice(val_buf.as_bytes());
+                                            }
                                         } else {
                                             nodes_buf.push(b'"');
                                             nodes_buf.extend_from_slice(val_buf.as_bytes());

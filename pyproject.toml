@@ -7,10 +7,12 @@ requires-python = ">=3.10"
 dependencies = ["numpy>=1.26", "pyyaml>=6"]
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "ruff>=0.5"]
+dev = ["pytest>=8", "ruff>=0.5", "scipy>=1.11", "scikit-learn>=1.4"]
+eval = ["scipy>=1.11", "scikit-learn>=1.4"]
 
 [project.scripts]
 sdg = "sdg.cli:main"
+sdg-eval = "sdg.evaluate:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -21,6 +23,7 @@ packages = ["src/sdg"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["src"]
 
 [tool.ruff]
 target-version = "py310"

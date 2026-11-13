@@ -1,0 +1,14 @@
+{
+ "synthesizer": "sdg_zcdp_marginal",
+ "epsilon_total": 1.0,
+ "delta": "1e-6",
+ "zcdp_rho_total": 0.017468904769123432,
+ "preprocessor_eps": 0.0,
+ "marginal_eps": 1.0,
+ "aux_eps": 0.0,
+ "root_entity": "Adult",
+ "as_of_snapshot": "static",
+ "fit_row_count": 32561,
+ "distinct_entity_count": 32561,
+ "max_records_per_entity": 1
+}
